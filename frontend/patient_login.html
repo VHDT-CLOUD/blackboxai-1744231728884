@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen flex items-center justify-center bg-cover bg-center" style="background-image: url('https://images.pexels.com/photos/3761509/pexels-photo-3761509.jpeg')">
+        <div class="bg-white bg-opacity-90 p-8 rounded-lg shadow-lg w-full max-w-md">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-blue-800">Patient Login</h1>
+                <p class="text-gray-600 mt-2">Access your medical records</p>
+            </div>
+            <form id="patientLoginForm" class="space-y-6">
+                <div>
+                    <label for="aadhaar" class="block text-sm font-medium text-gray-700">Aadhaar Number</label>
+                    <input type="text" id="aadhaar" name="aadhaar" pattern="\d{12}" required
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="12-digit Aadhaar number">
+                </div>
+                <div id="otpSection" class="hidden">
+                    <label for="otp" class="block text-sm font-medium text-gray-700">OTP</label>
+                    <input type="text" id="otp" name="otp" pattern="\d{6}"
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="6-digit OTP">
+                    <p class="mt-2 text-sm text-gray-500">OTP sent to your registered mobile number</p>
+                </div>
+                <div>
+                    <button type="button" id="sendOtpBtn"
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Send OTP
+                    </button>
+                    <button type="submit" id="loginBtn" class="hidden w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Login
+                    </button>
+                </div>
+                <div class="text-center">
+                    <a href="forgot_password.html" class="text-sm text-blue-600 hover:text-blue-800">Forgot Password?</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        document.getElementById('sendOtpBtn').addEventListener('click', async () => {
+            const aadhaar = document.getElementById('aadhaar').value;
+            if (!/^\d{12}$/.test(aadhaar)) {
+                alert('Please enter a valid 12-digit Aadhaar number');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/send-otp/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ aadhaar }),
+                });
+                
+                if (response.ok) {
+                    document.getElementById('otpSection').classList.remove('hidden');
+                    document.getElementById('sendOtpBtn').classList.add('hidden');
+                    document.getElementById('loginBtn').classList.remove('hidden');
+                    alert('OTP sent successfully (simulated)');
+                } else {
+                    alert('Failed to send OTP');
+                }
+            } catch (error) {
+                console.error('OTP error:', error);
+                alert('Error sending OTP');
+            }
+        });
+
+        document.getElementById('patientLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const aadhaar = document.getElementById('aadhaar').value;
+            const otp = document.getElementById('otp').value;
+            
+            try {
+                const response = await fetch('/api/patient-login/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ aadhaar, otp }),
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('token', data.token);
+                    window.location.href = 'patient_dashboard.html';
+                } else {
+                    alert('Invalid OTP');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Login failed');
+            }
+        });
+    </script>
+</body>
+</html>
